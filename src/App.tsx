@@ -15,7 +15,9 @@ import { ReviewQueueView } from './pages/portal/ReviewQueueView';
 import { EquipmentView } from './pages/portal/EquipmentView';
 import { AuditLogView } from './pages/portal/AuditLogView';
 import { AdminView } from './pages/portal/AdminView';
+import { SihPresentation } from './pages/SihPresentation';
 import { storageService, DEFAULT_USERS } from './services/storage';
+import { supabaseStorage } from './services/supabaseStorage';
 import { UserProfile } from './types/metrology';
 
 export const App: React.FC = () => {
@@ -33,6 +35,15 @@ export const App: React.FC = () => {
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Automatic Cloud Sync with Supabase PostgreSQL on startup
+  useEffect(() => {
+    supabaseStorage.getReports().then(({ reports, fromSupabase }) => {
+      if (fromSupabase) {
+        console.log(`[TraceR76] Synced ${reports.length} reports from Supabase Cloud.`);
+      }
+    }).catch(e => console.warn('Supabase sync skipped:', e));
   }, []);
 
   const navigate = (path: string) => {
@@ -132,9 +143,18 @@ export const App: React.FC = () => {
       return <PublicOther view={foundOther} onNavigate={navigate} />;
     }
 
-    // 14. Fallback / Home: /
+    // 14. SIH Presentation Pitch Deck (6 Slides)
+    if (currentPath === '/sih-ppt') {
+      return <SihPresentation onNavigate={navigate} />;
+    }
+
+    // 15. Fallback / Home: /
     return <Home onNavigate={navigate} />;
   };
+
+  if (currentPath === '/sih-ppt') {
+    return <SihPresentation onNavigate={navigate} />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">

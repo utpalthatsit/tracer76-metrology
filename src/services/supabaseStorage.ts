@@ -78,20 +78,28 @@ export class SupabaseStorageService {
     if (!supabase) return { success: true };
 
     try {
+      const normalizedVersion = typeof report.version === 'number' 
+        ? Math.round(report.version) 
+        : parseInt(String(report.version || '1'), 10) || 1;
+
+      const normalizedVerdict = ((report.overallVerdict || 'PENDING').toUpperCase()) as 'PASS' | 'FAIL' | 'PENDING';
+      const validVerdicts = ['PASS', 'FAIL', 'PENDING'];
+      const finalVerdict = validVerdicts.includes(normalizedVerdict) ? normalizedVerdict : 'PENDING';
+
       const payload = {
         id: report.id,
-        version: report.version,
-        status: report.status,
+        version: normalizedVersion,
+        status: report.status || 'Draft',
         updated_at: new Date().toISOString(),
         created_by: report.createdBy,
         assigned_reviewer: report.assignedReviewer || null,
         assigned_approver: report.assignedApprover || null,
         ruleset_version: report.rulesetVersion,
         ruleset_hash: report.rulesetHash,
-        overall_verdict: report.overallVerdict,
+        overall_verdict: finalVerdict,
         specs: report.specs,
         conditions: report.conditions,
-        equipment_ids: report.equipmentIds,
+        equipment_ids: Array.isArray(report.equipmentIds) ? report.equipmentIds : [],
         weighing_performance: report.weighingPerformance,
         eccentricity: report.eccentricity,
         repeatability: report.repeatability,
@@ -100,7 +108,7 @@ export class SupabaseStorageService {
         tare_test: report.tareTest,
         dual_engine_verification: report.dualEngineVerification || null,
         digital_seal: report.digitalSeal || null,
-        review_comments: report.reviewComments || []
+        review_comments: Array.isArray(report.reviewComments) ? report.reviewComments : []
       };
 
       const { error } = await supabase.from('reports').upsert(payload, { onConflict: 'id' });

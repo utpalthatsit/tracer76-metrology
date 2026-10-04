@@ -33,6 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: 'Verify Report', path: '/verify' },
     { label: 'Docs', path: '/docs' },
     { label: 'Validation Pack', path: '/validation' },
+    { label: 'SIH 2026 PPT', path: '/sih-ppt' },
   ];
 
   const portalLinks = [

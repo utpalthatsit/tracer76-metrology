@@ -733,6 +733,28 @@ class StorageService {
 
     logs.push(newEntry);
     localStorage.setItem(this.auditKey, JSON.stringify(logs));
+
+    // Asynchronously sync to Supabase
+    try {
+      import('./supabaseClient').then(m => {
+        const client = m.getSupabaseClient();
+        if (client) {
+          Promise.resolve(
+            client.from('audit_logs').upsert({
+              id: newEntry.id,
+              report_id: newEntry.reportId || null,
+              timestamp: newEntry.timestamp,
+              actor_name: newEntry.actorName,
+              actor_role: newEntry.actorRole,
+              action: newEntry.action,
+              details: newEntry.details,
+              previous_hash: newEntry.previousHash,
+              entry_hash: newEntry.entryHash
+            })
+          ).catch((e: any) => console.warn('Supabase audit sync skipped:', e));
+        }
+      });
+    } catch {}
   }
 
   public getCurrentUser(): UserProfile {
